@@ -607,6 +607,9 @@ function ChatScreen({ match, level, messages, onSend, onAudio, onPhoto, onShareC
 // --------------------------------------------------------------
 // PROGRESS
 // --------------------------------------------------------------
+// --------------------------------------------------------------
+// PROGRESS
+// --------------------------------------------------------------
 function ProgressScreen({ match, level, xp, hasAccepted, onProposeLevelUp, isPremium }) {
   const xpToNext = () => {
     const next = LEVELS.find(l => l.id === level + 1);
@@ -638,13 +641,25 @@ function ProgressScreen({ match, level, xp, hasAccepted, onProposeLevelUp, isPre
     <div className="progress-screen">
       <div className="progress-header">
         <h2>Mi progreso</h2>
-        <div className="match-chip"><span>⚡</span><span>Match: {match.name}</span></div>
+        <div className="match-chip">
+          <span>⚡</span>
+          <span>Match: {match.name}</span>
+        </div>
       </div>
+
       <div className="xp-card">
-        <div className="xp-row"><span>Experiencia (XP)</span><span>{xp} / {level >= 4 ? 'MAX' : xpToNext()}</span></div>
-        <div className="xp-track"><div className="xp-fill" style={{ width: `${level >= 4 ? 100 : progress()}%` }} /></div>
+        <div className="xp-row">
+          <span>Experiencia (XP)</span>
+          <span>{xp} / {level >= 4 ? 'MAX' : xpToNext()}</span>
+        </div>
+        <div className="xp-track">
+          <div className="xp-fill" style={{ width: `${level >= 4 ? 100 : progress()}%` }} />
+        </div>
+
         <div className="levels-row">
-          <div className="levels-track"><div className="levels-track-fill" style={{ width: `${((level - 1) / (allLevels.length - 1)) * 100}%` }} /></div>
+          <div className="levels-track">
+            <div className="levels-track-fill" style={{ width: `${((level - 1) / (allLevels.length - 1)) * 100}%` }} />
+          </div>
           {allLevels.map(lvl => {
             const unlocked = level >= lvl.id;
             const isCurrent = level === lvl.id;
@@ -660,9 +675,14 @@ function ProgressScreen({ match, level, xp, hasAccepted, onProposeLevelUp, isPre
           })}
         </div>
       </div>
+
       {level < 4 ? (
         <>
-          <button className="btn-levelup" disabled={hasAccepted} onClick={onProposeLevelUp}>
+          <button
+            className="btn-levelup"
+            disabled={hasAccepted}
+            onClick={onProposeLevelUp}
+          >
             {hasAccepted ? '⏳ Esperando confirmación...' : `⬆️ Subir a Nivel ${level + 1}`}
           </button>
           <div className="hint-box">
