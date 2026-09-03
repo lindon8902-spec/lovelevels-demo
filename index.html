@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg-deep: #020617;
@@ -35,7 +36,6 @@
   .phone { width: 100%; max-width: 460px; height: 100%; background: var(--bg-app); display: flex; flex-direction: column; position: relative; overflow: hidden; }
   @media (min-width: 640px) { .phone { height: 90vh; border-radius: 32px; box-shadow: 0 0 60px rgba(0,0,0,.7); } }
 
-  /* Login & Register */
   .login-screen { height: 100%; background: linear-gradient(to bottom, #0f172a, #1e293b); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; color: var(--text); overflow-y: auto; }
   .login-inner { width: 100%; max-width: 360px; }
   .login-title { font-size: 42px; font-weight: 800; text-align: center; margin: 0; background: linear-gradient(to right, var(--amber-light), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
@@ -57,7 +57,6 @@
   .divider-row hr { flex: 1; border: none; border-top: 1px solid var(--border); }
   .divider-row span { font-size: 11px; color: var(--text-dimmer); white-space: nowrap; }
 
-  /* Swipe */
   .swipe-screen { display: flex; flex-direction: column; height: 100%; padding: 16px; padding-top: 22px; }
   .swipe-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 8px; }
   .swipe-header h2 { color: var(--text); font-size: 20px; font-weight: 700; margin: 0; }
@@ -80,7 +79,6 @@
   .empty-state p { color: var(--text-dim); margin-top: 8px; font-size: 14px; }
   .btn-reload { margin-top: 22px; padding: 12px 22px; background: var(--amber); border: none; border-radius: 14px; font-weight: 700; color: #1e293b; }
 
-  /* Progress */
   .progress-screen { display: flex; flex-direction: column; height: 100%; padding: 16px; padding-top: 22px; color: var(--text); }
   .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding: 0 8px; }
   .progress-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
@@ -103,7 +101,6 @@
   .hint-box { text-align: center; font-size: 13px; color: #9ca3af; background: rgba(30,41,59,.3); padding: 12px; border-radius: 14px; border: 1px solid rgba(51,65,85,.5); margin-top: 16px; }
   .hint-box .accepted { color: var(--emerald); }
 
-  /* Questions & Reveal */
   .questions-screen { display: flex; flex-direction: column; height: 100%; padding: 24px; color: var(--text); }
   .questions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .questions-header h2 { font-size: 20px; font-weight: 700; margin: 0; }
@@ -127,7 +124,6 @@
   .reveal-item .answers .theirs { color: var(--emerald); }
   .btn-continue { margin-top: 20px; padding: 16px; border-radius: 18px; border: none; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px rgba(245,158,11,.3); }
 
-  /* Chat */
   .chat-screen { display: flex; flex-direction: column; height: 100%; background: var(--bg-app); }
   .chat-header { padding: 14px 16px; border-bottom: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; }
   .chat-header-left { display: flex; align-items: center; gap: 12px; }
@@ -154,7 +150,6 @@
   .send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--amber); border: none; color: #1e293b; font-size: 18px; display: flex; align-items: center; justify-content: center; }
   .round-btn-sm { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-card); border: none; font-size: 18px; color: var(--text); }
 
-  /* Profile */
   .profile-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 24px; color: var(--text); text-align: center; }
   .profile-avatar { width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(to right, var(--amber-light), var(--pink)); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
   .profile-screen h2 { margin: 0; font-size: 22px; }
@@ -168,7 +163,6 @@
   .btn-premium.inactive { border-color: rgba(245,158,11,.4); color: var(--amber-light); }
   .btn-logout { width: 100%; padding: 13px; background: rgba(248,113,113,.15); border: 1px solid rgba(248,113,113,.3); border-radius: 14px; color: var(--red); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
 
-  /* Nav */
   .bottom-nav { background: var(--bg-app); border-top: 1px solid #1e293b; display: flex; justify-content: space-around; padding: 12px 0 20px; }
   .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: #475569; }
   .nav-btn.active { color: var(--amber-light); }
@@ -185,7 +179,15 @@
 const { useState, useEffect, useRef } = React;
 
 // --------------------------------------------------------------
-// DATOS MOCK
+// 🔑 CONFIGURACIÓN DE SUPABASE (¡REEMPLAZA ESTAS DOS LÍNEAS!)
+// --------------------------------------------------------------
+const SUPABASE_URL = 'https://czgbtxyyuspbrnslrmbs.supabase.co';   // <--- Project URL
+const SUPABASE_ANON_KEY = 'sb_publishable_qZrp5Nwdbu8ADk...';      // <--- Publishable key
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// --------------------------------------------------------------
+// DATOS MOCK (para el modo demo)
 // --------------------------------------------------------------
 const MOCK_USERS = [
   { id: '1', name: 'Lucía', age: 25, city: 'Madrid', bio: 'Amante del cine indie y los gatos.', gradient: 'linear-gradient(135deg,#fb7185,#fdba74)' },
@@ -209,6 +211,9 @@ const QUESTIONS = [
   "¿Qué te hace sentir más vivo/a?"
 ];
 
+// --------------------------------------------------------------
+// COMPONENTES
+// --------------------------------------------------------------
 function Avatar({ user, className, style }) {
   return (
     <div className={className || 'avatar-fill'} style={{ background: user.gradient, ...style }}>
@@ -229,7 +234,7 @@ function calculateAge(dobString) {
 }
 
 // --------------------------------------------------------------
-// REGISTER
+// REGISTER (con Supabase)
 // --------------------------------------------------------------
 function RegisterScreen({ onRegister, onBackToLogin }) {
   const [form, setForm] = useState({
@@ -238,6 +243,7 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
     aceptaTerminos: false,
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
 
@@ -263,12 +269,52 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
     return errs;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const errs = validate();
     setErrors(errs);
-    if (Object.keys(errs).length === 0) {
+    if (Object.keys(errs).length > 0) return;
+
+    setLoading(true);
+    try {
+      // 1. Crear usuario en Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (authError) throw authError;
+
+      const userId = authData.user.id;
+
+      // 2. Guardar perfil en la tabla profiles
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: userId,
+        alias: form.alias,
+        nombre: form.nombre,
+        apellido: form.apellido,
+        fecha_nacimiento: form.fechaNacimiento,
+        genero: form.genero,
+        interesado_en: form.interesadoEn,
+        ciudad: form.ciudad,
+        bio: form.bio,
+      });
+
+      if (profileError) throw profileError;
+
+      // 3. Iniciar sesión automáticamente
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (signInError) throw signInError;
+
       onRegister(form.email);
+    } catch (error) {
+      alert('Error al registrarte: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -330,7 +376,9 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
             <span>Confirmo que soy mayor de 18 años y acepto los Términos de uso y la Política de privacidad.</span>
           </label>
           {errors.aceptaTerminos && <p className="field-error">{errors.aceptaTerminos}</p>}
-          <button className="btn-primary" type="submit">Crear cuenta</button>
+          <button className="btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Registrando...' : 'Crear cuenta'}
+          </button>
         </form>
         <p className="switch-line">
           ¿Ya tienes cuenta?
@@ -342,16 +390,29 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
 }
 
 // --------------------------------------------------------------
-// LOGIN
+// LOGIN (sin modo demo)
 // --------------------------------------------------------------
 function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showRegister, setShowRegister] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onLogin(email || 'demo@lovelevels.com');
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      onLogin(email);
+    } catch (error) {
+      alert('Error al iniciar sesión: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (showRegister) {
@@ -366,15 +427,16 @@ function LoginScreen({ onLogin }) {
         <form onSubmit={handleSubmit}>
           <input className="field" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
           <input className="field" type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} />
-          <button className="btn-primary" type="submit">Iniciar sesión</button>
+          <button className="btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Cargando...' : 'Iniciar sesión'}
+          </button>
         </form>
         <p className="switch-line">
           ¿No tienes cuenta?
           <button className="link-btn" onClick={() => setShowRegister(true)}>Regístrate</button>
         </p>
-        <div className="divider-row"><hr /><span>o prueba sin registro</span><hr /></div>
-        <
-      </div>
+        <div className="divider-row"><hr /><span>o</span><hr /></div>
+        {/* Modo demo ELIMINADO */}      </div>
     </div>
   );
 }
@@ -382,14 +444,14 @@ function LoginScreen({ onLogin }) {
 // --------------------------------------------------------------
 // SWIPE
 // --------------------------------------------------------------
-function SwipeScreen({ onMatch }) {
+function SwipeScreen({ onMatch, users }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [offsetX, setOffsetX] = useState(0);
   const [lastResult, setLastResult] = useState(null);
 
-  const currentUserData = MOCK_USERS[currentIndex];
+  const currentUserData = users[currentIndex];
 
   const handleSwipe = (direction) => {
     if (!currentUserData) return;
@@ -417,7 +479,7 @@ function SwipeScreen({ onMatch }) {
     else setOffsetX(0);
   };
 
-  if (currentIndex >= MOCK_USERS.length) {
+  if (currentIndex >= users.length) {
     return (
       <div className="empty-state">
         <div className="icon">👥</div>
@@ -432,7 +494,7 @@ function SwipeScreen({ onMatch }) {
     <div className="swipe-screen">
       <div className="swipe-header">
         <h2>Descubrir</h2>
-        <span className="pill">{MOCK_USERS.length - currentIndex} perfiles</span>
+        <span className="pill">{users.length - currentIndex} perfiles</span>
       </div>
       {lastResult && <div className="match-banner">💖 ¡Match con {lastResult.name}! Responde preguntas para conectar.</div>}
       <div className="swipe-area">
@@ -447,7 +509,9 @@ function SwipeScreen({ onMatch }) {
           onMouseUp={endDrag}
           onMouseLeave={() => isDragging && endDrag()}
         >
-          <Avatar user={currentUserData} className="avatar-fill" style={{ width: '100%', height: '100%' }} />
+          <div className="avatar-fill" style={{ background: currentUserData.gradient || 'linear-gradient(135deg,#fb7185,#fdba74)' }}>
+            {currentUserData.name.charAt(0)}
+          </div>
           <div className="card-info">
             <h3>{currentUserData.name}, {currentUserData.age}</h3>
             <p className="city">{currentUserData.city}</p>
@@ -556,7 +620,9 @@ function ChatScreen({ match, level, messages, onSend, onAudio, onPhoto, onShareC
     <div className="chat-screen">
       <div className="chat-header">
         <div className="chat-header-left">
-          <Avatar user={match} className="avatar-round" />
+          <div className="avatar-round" style={{ background: match.gradient || 'linear-gradient(135deg,#f59e0b,#ec4899)' }}>
+            {match.name.charAt(0)}
+          </div>
           <div>
             <p className="name">{match.name}</p>
             <p className="lvl">★ Nivel {level}</p>
@@ -605,10 +671,7 @@ function ChatScreen({ match, level, messages, onSend, onAudio, onPhoto, onShareC
 }
 
 // --------------------------------------------------------------
-// PROGRESS
-// --------------------------------------------------------------
-// --------------------------------------------------------------
-// PROGRESS
+// PROGRESS (CORREGIDO)
 // --------------------------------------------------------------
 function ProgressScreen({ match, level, xp, hasAccepted, onProposeLevelUp, isPremium }) {
   const xpToNext = () => {
@@ -737,11 +800,10 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [toast, setToast] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
-
-  // Fases: null, 'questions', 'reveal', 'chat'
   const [phase, setPhase] = useState(null);
   const [myAnswers, setMyAnswers] = useState([]);
   const [theirAnswers, setTheirAnswers] = useState([]);
+  const [users, setUsers] = useState(MOCK_USERS);
 
   const showToast = (msg, duration = 2200) => {
     setToast(msg);
@@ -863,7 +925,9 @@ function App() {
   if (!email) {
     return (
       <div className="app-shell">
-        <div className="phone"><LoginScreen onLogin={handleLogin} /></div>
+        <div className="phone">
+          <LoginScreen onLogin={handleLogin} />
+        </div>
       </div>
     );
   }
@@ -922,7 +986,7 @@ function App() {
     <div className="app-shell">
       <div className="phone">
         <div style={{ flex: 1, overflow: 'hidden' }}>
-          {activeTab === 'swipe' && <SwipeScreen onMatch={handleMatch} />}
+          {activeTab === 'swipe' && <SwipeScreen onMatch={handleMatch} users={users} />}
           {activeTab === 'progress' && (
             <ProgressScreen
               match={currentMatch}
