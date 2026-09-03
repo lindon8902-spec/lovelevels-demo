@@ -50,6 +50,7 @@
   .checkbox-row input { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; }
   .btn-primary { width: 100%; padding: 15px; border-radius: 14px; border: none; margin-top: 20px; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px rgba(245,158,11,.25); }
   .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: .6; }
   .btn-outline { width: 100%; padding: 13px; border-radius: 14px; margin-top: 22px; background: transparent; border: 1px solid #475569; color: #cbd5e1; font-size: 14px; }
   .switch-line { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 18px; }
   .link-btn { background: none; border: none; color: var(--amber-light); font-weight: 600; margin-left: 4px; padding: 0; font-size: 13px; }
@@ -187,7 +188,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_qZrp5Nwdbu8ADk...';      // <--- Publi
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --------------------------------------------------------------
-// DATOS MOCK (para el modo demo)
+// DATOS MOCK (perfiles a descubrir)
 // --------------------------------------------------------------
 const MOCK_USERS = [
   { id: '1', name: 'Lucía', age: 25, city: 'Madrid', bio: 'Amante del cine indie y los gatos.', gradient: 'linear-gradient(135deg,#fb7185,#fdba74)' },
@@ -214,14 +215,6 @@ const QUESTIONS = [
 // --------------------------------------------------------------
 // COMPONENTES
 // --------------------------------------------------------------
-function Avatar({ user, className, style }) {
-  return (
-    <div className={className || 'avatar-fill'} style={{ background: user.gradient, ...style }}>
-      {user.name.charAt(0)}
-    </div>
-  );
-}
-
 function calculateAge(dobString) {
   if (!dobString) return null;
   const dob = new Date(dobString);
@@ -277,7 +270,6 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
 
     setLoading(true);
     try {
-      // 1. Crear usuario en Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
@@ -287,7 +279,6 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
 
       const userId = authData.user.id;
 
-      // 2. Guardar perfil en la tabla profiles
       const { error: profileError } = await supabase.from('profiles').insert({
         id: userId,
         alias: form.alias,
@@ -302,7 +293,6 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
 
       if (profileError) throw profileError;
 
-      // 3. Iniciar sesión automáticamente
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
@@ -671,7 +661,7 @@ function ChatScreen({ match, level, messages, onSend, onAudio, onPhoto, onShareC
 }
 
 // --------------------------------------------------------------
-// PROGRESS (CORREGIDO)
+// PROGRESS
 // --------------------------------------------------------------
 function ProgressScreen({ match, level, xp, hasAccepted, onProposeLevelUp, isPremium }) {
   const xpToNext = () => {
