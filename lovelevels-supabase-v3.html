@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>LoveLevels - Juego de Citas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bg-deep: #020617;
+    --bg-app: #0f172a;
+    --bg-card: #1e293b;
+    --border: #334155;
+    --amber: #f59e0b;
+    --amber-light: #fbbf24;
+    --pink: #ec4899;
+    --emerald: #34d399;
+    --red: #f87171;
+    --text: #f8fafc;
+    --text-dim: #94a3b8;
+    --text-dimmer: #64748b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: var(--bg-deep); font-family: -apple-system, system-ui, sans-serif; }
+  #root { height: 100%; }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg-card); }
+  ::-webkit-scrollbar-thumb { background: var(--amber); border-radius: 8px; }
+
+  .app-shell { height: 100vh; width: 100%; display: flex; align-items: center; justify-content: center; background: var(--bg-deep); }
+  .phone { width: 100%; max-width: 460px; height: 100%; background: var(--bg-app); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+  @media (min-width: 640px) { .phone { height: 90vh; border-radius: 32px; box-shadow: 0 0 60px rgba(0,0,0,.7); } }
+
+  .login-screen { height: 100%; background: linear-gradient(to bottom, #0f172a, #1e293b); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 28px; color: var(--text); overflow-y: auto; }
+  .login-inner { width: 100%; max-width: 360px; }
+  .login-title { font-size: 42px; font-weight: 800; text-align: center; margin: 0; background: linear-gradient(to right, var(--amber-light), var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .login-sub { text-align: center; color: var(--text-dim); margin-top: 10px; font-size: 14px; line-height: 1.5; }
+  .field { width: 100%; padding: 15px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text); font-size: 15px; margin-top: 14px; outline: none; }
+  .field:focus { border-color: var(--amber); }
+  .field-error { font-size: 12px; color: var(--red); margin: 4px 2px 0; }
+  .field-note { font-size: 11px; color: var(--text-dimmer); margin: 4px 2px 0; }
+  .field-label { display: block; font-size: 12px; color: var(--text-dim); margin-top: 14px; margin-bottom: -6px; }
+  .form-row { display: flex; gap: 10px; }
+  .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .checkbox-row input { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; }
+  .btn-primary { width: 100%; padding: 15px; border-radius: 14px; border: none; margin-top: 20px; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px rgba(245,158,11,.25); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: .6; }
+  .btn-outline { width: 100%; padding: 13px; border-radius: 14px; margin-top: 22px; background: transparent; border: 1px solid #475569; color: #cbd5e1; font-size: 14px; }
+  .switch-line { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 18px; }
+  .link-btn { background: none; border: none; color: var(--amber-light); font-weight: 600; margin-left: 4px; padding: 0; font-size: 13px; }
+  .divider-row { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
+  .divider-row hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+  .divider-row span { font-size: 11px; color: var(--text-dimmer); white-space: nowrap; }
+
+  .swipe-screen { display: flex; flex-direction: column; height: 100%; padding: 16px; padding-top: 22px; }
+  .swipe-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 8px; }
+  .swipe-header h2 { color: var(--text); font-size: 20px; font-weight: 700; margin: 0; }
+  .pill { color: var(--amber-light); font-size: 12px; border: 1px solid rgba(245,158,11,.3); padding: 5px 12px; border-radius: 999px; }
+  .match-banner { margin-bottom: 10px; text-align: center; font-size: 13px; background: rgba(52,211,153,.12); border: 1px solid rgba(52,211,153,.35); color: var(--emerald); border-radius: 12px; padding: 9px; }
+  .swipe-area { flex: 1; position: relative; user-select: none; }
+  .swipe-card { position: absolute; inset: 0; border-radius: 24px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,.5); border: 1px solid var(--border); }
+  .avatar-fill { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #1e293b; font-size: 96px; }
+  .card-info { position: absolute; left: 0; right: 0; bottom: 0; padding: 24px; background: linear-gradient(to top, rgba(0,0,0,.9), rgba(0,0,0,.5), transparent); }
+  .card-info h3 { color: var(--text); font-size: 24px; font-weight: 700; margin: 0; }
+  .card-info .city { color: #cbd5e1; margin: 2px 0 0; }
+  .card-info .bio { color: #e2e8f0; margin-top: 8px; font-size: 14px; }
+  .swipe-actions { position: absolute; bottom: 24px; left: 0; right: 0; display: flex; justify-content: center; gap: 32px; }
+  .round-btn { width: 62px; height: 62px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 26px; box-shadow: 0 10px 25px rgba(0,0,0,.4); border: 2px solid; }
+  .round-btn.no { border-color: rgba(248,113,113,.5); color: var(--red); }
+  .round-btn.yes { border-color: rgba(52,211,153,.5); color: var(--emerald); }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding: 24px; color: var(--text); }
+  .empty-state .icon { font-size: 48px; margin-bottom: 14px; }
+  .empty-state h2 { margin: 0; font-size: 21px; }
+  .empty-state p { color: var(--text-dim); margin-top: 8px; font-size: 14px; }
+  .btn-reload { margin-top: 22px; padding: 12px 22px; background: var(--amber); border: none; border-radius: 14px; font-weight: 700; color: #1e293b; }
+
+  .progress-screen { display: flex; flex-direction: column; height: 100%; padding: 16px; padding-top: 22px; color: var(--text); }
+  .progress-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; padding: 0 8px; }
+  .progress-header h2 { margin: 0; font-size: 20px; font-weight: 700; }
+  .match-chip { background: var(--bg-card); padding: 5px 12px; border-radius: 999px; font-size: 11px; border: 1px solid rgba(245,158,11,.3); display: flex; align-items: center; gap: 5px; }
+  .xp-card { background: rgba(30,41,59,.5); border-radius: 24px; padding: 22px; border: 1px solid var(--border); margin-bottom: 22px; }
+  .xp-row { display: flex; justify-content: space-between; font-size: 13px; color: #9ca3af; margin-bottom: 5px; }
+  .xp-track { width: 100%; background: #334155; height: 15px; border-radius: 999px; overflow: hidden; }
+  .xp-fill { height: 100%; background: linear-gradient(to right, #facc15, #f97316); transition: width .7s ease-out; }
+  .levels-row { display: flex; justify-content: space-between; margin-top: 18px; padding: 0 4px; position: relative; }
+  .level-node { display: flex; flex-direction: column; align-items: center; z-index: 1; }
+  .level-circle { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid; font-size: 14px; background: rgba(51,65,85,.5); border-color: #475569; color: #64748b; }
+  .level-circle.unlocked { background: rgba(52,211,153,.2); border-color: var(--emerald); color: var(--emerald); }
+  .level-circle.current { box-shadow: 0 0 0 4px rgba(250,204,21,.35); transform: scale(1.1); }
+  .level-node span { font-size: 11px; margin-top: 5px; color: #64748b; }
+  .level-node.unlocked span { color: var(--text); }
+  .levels-track { position: absolute; top: 20px; left: 15%; width: 70%; height: 2px; background: #334155; z-index: 0; }
+  .levels-track-fill { height: 100%; background: rgba(52,211,153,.5); }
+  .btn-levelup { width: 100%; padding: 16px; border-radius: 18px; font-weight: 700; font-size: 16px; border: none; display: flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; box-shadow: 0 12px 25px rgba(245,158,11,.3); }
+  .btn-levelup:disabled { background: #334155; color: #64748b; box-shadow: none; }
+  .hint-box { text-align: center; font-size: 13px; color: #9ca3af; background: rgba(30,41,59,.3); padding: 12px; border-radius: 14px; border: 1px solid rgba(51,65,85,.5); margin-top: 16px; }
+  .hint-box .accepted { color: var(--emerald); }
+
+  .questions-screen { display: flex; flex-direction: column; height: 100%; padding: 24px; color: var(--text); }
+  .questions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .questions-header h2 { font-size: 20px; font-weight: 700; margin: 0; }
+  .questions-header button { background: none; border: none; color: var(--text-dim); font-size: 14px; }
+  .progress-bar { background: #334155; height: 4px; border-radius: 2px; margin-bottom: 24px; }
+  .progress-bar-fill { height: 100%; background: var(--amber); border-radius: 2px; transition: width .3s; }
+  .q-card { background: rgba(30,41,59,.5); border-radius: 24px; padding: 28px; border: 1px solid var(--border); flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .q-card .q-number { font-size: 12px; color: var(--amber-light); margin-bottom: 6px; }
+  .q-card .q-text { font-size: 20px; font-weight: 600; margin-bottom: 24px; }
+  .q-card input { width: 100%; padding: 16px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text); font-size: 15px; outline: none; }
+  .q-card input:focus { border-color: var(--amber); }
+  .q-card .btn-next { margin-top: 16px; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; }
+
+  .reveal-screen { display: flex; flex-direction: column; height: 100%; padding: 24px; color: var(--text); overflow-y: auto; }
+  .reveal-screen h2 { text-align: center; font-size: 22px; margin: 0 0 4px; }
+  .reveal-sub { text-align: center; color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+  .reveal-item { background: rgba(30,41,59,.5); border-radius: 16px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; }
+  .reveal-item .q { font-size: 12px; color: var(--amber-light); margin-bottom: 6px; }
+  .reveal-item .answers { display: flex; gap: 20px; font-size: 14px; }
+  .reveal-item .answers .mine { color: var(--text-dim); }
+  .reveal-item .answers .theirs { color: var(--emerald); }
+  .btn-continue { margin-top: 20px; padding: 16px; border-radius: 18px; border: none; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px rgba(245,158,11,.3); }
+
+  .chat-screen { display: flex; flex-direction: column; height: 100%; background: var(--bg-app); }
+  .chat-header { padding: 14px 16px; border-bottom: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; }
+  .chat-header-left { display: flex; align-items: center; gap: 12px; }
+  .avatar-round { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #1e293b; }
+  .chat-header-left .name { color: var(--text); font-weight: 600; margin: 0; font-size: 15px; }
+  .chat-header-left .lvl { color: var(--amber-light); font-size: 11px; margin: 2px 0 0; }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-card); border: 1px solid; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+  .icon-btn.amber { color: var(--amber-light); border-color: rgba(245,158,11,.3); }
+  .icon-btn.emerald { color: var(--emerald); border-color: rgba(52,211,153,.3); }
+  .messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .msg-row { display: flex; }
+  .msg-row.me { justify-content: flex-end; }
+  .msg-row.them { justify-content: flex-start; }
+  .bubble { max-width: 78%; padding: 11px 14px; border-radius: 18px; font-size: 14px; }
+  .bubble.me { background: var(--amber); color: #1e293b; border-bottom-right-radius: 4px; }
+  .bubble.them { background: var(--bg-card); color: var(--text); border-bottom-left-radius: 4px; }
+  .bubble time { display: block; text-align: right; font-size: 10px; opacity: .55; margin-top: 4px; }
+  .chat-empty { text-align: center; color: #64748b; margin-top: 70px; }
+  .chat-empty .icon { font-size: 34px; margin-bottom: 8px; }
+  .chat-input-row { padding: 14px; border-top: 1px solid #1e293b; display: flex; align-items: center; gap: 8px; }
+  .chat-input { flex: 1; padding: 12px 16px; border-radius: 999px; background: var(--bg-card); color: var(--text); border: 1px solid var(--border); outline: none; font-size: 14px; }
+  .chat-input:focus { border-color: var(--amber); }
+  .send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--amber); border: none; color: #1e293b; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+  .round-btn-sm { width: 44px; height: 44px; border-radius: 50%; background: var(--bg-card); border: none; font-size: 18px; color: var(--text); }
+
+  .profile-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 24px; color: var(--text); text-align: center; }
+  .profile-avatar { width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(to right, var(--amber-light), var(--pink)); display: flex; align-items: center; justify-content: center; font-size: 38px; font-weight: 700; color: #1e293b; margin-bottom: 16px; }
+  .profile-screen h2 { margin: 0; font-size: 22px; }
+  .profile-screen .email { color: var(--text-dim); margin-top: 4px; }
+  .profile-stats { margin-top: 32px; width: 100%; max-width: 280px; display: flex; flex-direction: column; gap: 14px; }
+  .stat-row { display: flex; justify-content: space-between; padding: 12px 14px; background: var(--bg-card); border-radius: 14px; border: 1px solid var(--border); font-size: 14px; }
+  .stat-row .val-amber { color: var(--amber-light); font-weight: 700; }
+  .stat-row .val-emerald { color: var(--emerald); font-weight: 700; }
+  .btn-premium { width: 100%; padding: 13px; border-radius: 14px; border: 1px solid; background: transparent; font-weight: 700; font-size: 14px; }
+  .btn-premium.active { border-color: rgba(52,211,153,.4); color: var(--emerald); }
+  .btn-premium.inactive { border-color: rgba(245,158,11,.4); color: var(--amber-light); }
+  .btn-logout { width: 100%; padding: 13px; background: rgba(248,113,113,.15); border: 1px solid rgba(248,113,113,.3); border-radius: 14px; color: var(--red); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; }
+
+  .bottom-nav { background: var(--bg-app); border-top: 1px solid #1e293b; display: flex; justify-content: space-around; padding: 12px 0 20px; }
+  .nav-btn { display: flex; flex-direction: column; align-items: center; gap: 2px; background: none; border: none; color: #475569; }
+  .nav-btn.active { color: var(--amber-light); }
+  .nav-btn .nav-icon { font-size: 21px; line-height: 1; }
+  .nav-btn .nav-label { font-size: 10px; font-weight: 500; }
+
+  .toast { position: absolute; top: 16px; right: 16px; background: var(--emerald); color: #fff; font-size: 12px; padding: 7px 14px; border-radius: 999px; box-shadow: 0 8px 20px rgba(52,211,153,.5); z-index: 10; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+// --------------------------------------------------------------
+// 🔑 CONFIGURACIÓN DE SUPABASE
+// --------------------------------------------------------------
+const SUPABASE_URL = 'https://czgbtxyyuspbrnslrmbs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_qZrp5Nwdbua8ADkVNYZqoQ_FALolSQx';
+
+const SUPABASE_SDK_LOADED = typeof window.supabase !== 'undefined';
+const supabase = SUPABASE_SDK_LOADED
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+// --------------------------------------------------------------
+// DATOS MOCK (perfiles a descubrir)
+// --------------------------------------------------------------
+const MOCK_USERS = [
+  { id: '1', name: 'Lucía', age: 25, city: 'Madrid', bio: 'Amante del cine indie y los gatos.', gradient: 'linear-gradient(135deg,#fb7185,#fdba74)' },
+  { id: '2', name: 'Carlos', age: 28, city: 'Barcelona', bio: 'Chef y viajero. Busco a mi compañera de aventuras.', gradient: 'linear-gradient(135deg,#38bdf8,#67e8f9)' },
+  { id: '3', name: 'Marta', age: 23, city: 'Valencia', bio: 'Estudiante de arte. Me encanta el rock y el café.', gradient: 'linear-gradient(135deg,#a78bfa,#f0abfc)' },
+  { id: '4', name: 'Jorge', age: 30, city: 'Sevilla', bio: 'Ingeniero de día, DJ de noche.', gradient: 'linear-gradient(135deg,#34d399,#5eead4)' },
+  { id: '5', name: 'Elena', age: 26, city: 'Bilbao', bio: 'Surfista y diseñadora gráfica. Busco buena conversación.', gradient: 'linear-gradient(135deg,#fbbf24,#fde047)' },
+];
+
+const LEVELS = [
+  { id: 1, name: 'Texto', xpReq: 0 },
+  { id: 2, name: 'Voz', xpReq: 100 },
+  { id: 3, name: 'Fotos', xpReq: 250 },
+];
+
+const QUESTIONS = [
+  "¿Cuál es el viaje que más te ha marcado?",
+  "¿Qué libro o película te hizo llorar?",
+  "Si pudieras cenar con alguien histórico, ¿quién sería?",
+  "¿Cuál es tu mayor miedo?",
+  "¿Qué te hace sentir más vivo/a?"
+];
+
+// --------------------------------------------------------------
+// COMPONENTES
+// --------------------------------------------------------------
+function calculateAge(dobString) {
+  if (!dobString) return null;
+  const dob = new Date(dobString);
+  if (isNaN(dob.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - dob.getFullYear();
+  const m = today.getMonth() - dob.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+  return age;
+}
+
+// --------------------------------------------------------------
+// REGISTER (con Supabase)
+// --------------------------------------------------------------
+function RegisterScreen({ onRegister, onBackToLogin }) {
+  const [form, setForm] = useState({
+    nombre: '', apellido: '', alias: '', fechaNacimiento: '', genero: '',
+    interesadoEn: '', ciudad: '', bio: '', email: '', password: '', confirmPassword: '',
+    aceptaTerminos: false,
+  });
+  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+
+  const setField = (key, value) => setForm(prev => ({ ...prev, [key]: value }));
+
+  const validate = () => {
+    const errs = {};
+    if (!form.nombre.trim()) errs.nombre = 'Ingresa tu nombre';
+    if (!form.apellido.trim()) errs.apellido = 'Ingresa tu apellido';
+    if (!form.alias.trim()) errs.alias = 'Elige un alias público';
+    if (!form.fechaNacimiento) errs.fechaNacimiento = 'Ingresa tu fecha de nacimiento';
+    else {
+      const age = calculateAge(form.fechaNacimiento);
+      if (age === null) errs.fechaNacimiento = 'Fecha inválida';
+      else if (age < 18) errs.fechaNacimiento = 'Debes ser mayor de 18 años';
+    }
+    if (!form.genero) errs.genero = 'Selecciona tu género';
+    if (!form.interesadoEn) errs.interesadoEn = 'Selecciona qué te interesa';
+    if (!form.ciudad.trim()) errs.ciudad = 'Ingresa tu ciudad';
+    if (!form.email.trim()) errs.email = 'Ingresa tu email';
+    if (!form.password) errs.password = 'Ingresa una contraseña';
+    else if (form.password.length < 6) errs.password = 'Mínimo 6 caracteres';
+    if (form.confirmPassword !== form.password) errs.confirmPassword = 'Las contraseñas no coinciden';
+    if (!form.aceptaTerminos) errs.aceptaTerminos = 'Debes aceptar los términos y confirmar que eres mayor de edad';
+    return errs;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const errs = validate();
+    setErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    if (!SUPABASE_SDK_LOADED) {
+      alert('El SDK de Supabase no cargó en este entorno. Vuelve a la pantalla anterior y usa "Entrar en modo demo", o abre este archivo fuera de Claude para registrarte de verdad.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (authError) throw authError;
+
+      const userId = authData.user.id;
+
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: userId,
+        alias: form.alias,
+        nombre: form.nombre,
+        apellido: form.apellido,
+        fecha_nacimiento: form.fechaNacimiento,
+        genero: form.genero,
+        interesado_en: form.interesadoEn,
+        ciudad: form.ciudad,
+        bio: form.bio,
+      });
+
+      if (profileError) throw profileError;
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: form.email,
+        password: form.password,
+      });
+
+      if (signInError) throw signInError;
+
+      onRegister(form.email);
+    } catch (error) {
+      alert('Error al registrarte: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="login-screen">
+      <div className="login-inner">
+        <h1 className="login-title" style={{ fontSize: 32 }}>Crear cuenta</h1>
+        <p className="login-sub">Solo para mayores de 18 años. Completa tu perfil para empezar a hacer match.</p>
+        <form onSubmit={handleSubmit} noValidate>
+          <div className="form-row">
+            <div style={{ flex: 1 }}>
+              <input className="field" placeholder="Nombre" value={form.nombre} onChange={e => setField('nombre', e.target.value)} />
+              {errors.nombre && <p className="field-error">{errors.nombre}</p>}
+            </div>
+            <div style={{ flex: 1 }}>
+              <input className="field" placeholder="Apellido" value={form.apellido} onChange={e => setField('apellido', e.target.value)} />
+              {errors.apellido && <p className="field-error">{errors.apellido}</p>}
+            </div>
+          </div>
+          <input className="field" placeholder="Alias (nombre público)" value={form.alias} onChange={e => setField('alias', e.target.value)} />
+          {errors.alias && <p className="field-error">{errors.alias}</p>}
+          <label className="field-label">Fecha de nacimiento</label>
+          <input className="field" type="date" value={form.fechaNacimiento} onChange={e => setField('fechaNacimiento', e.target.value)} />
+          {errors.fechaNacimiento && <p className="field-error">{errors.fechaNacimiento}</p>}
+          <p className="field-note">Debes tener 18 años o más para usar LoveLevels.</p>
+          <div className="form-row">
+            <div style={{ flex: 1 }}>
+              <select className="field" value={form.genero} onChange={e => setField('genero', e.target.value)}>
+                <option value="">Género</option>
+                <option value="mujer">Mujer</option>
+                <option value="hombre">Hombre</option>
+                <option value="no_binario">No binario</option>
+                <option value="otro">Otro</option>
+                <option value="prefiero_no_decir">Prefiero no decir</option>
+              </select>
+              {errors.genero && <p className="field-error">{errors.genero}</p>}
+            </div>
+            <div style={{ flex: 1 }}>
+              <select className="field" value={form.interesadoEn} onChange={e => setField('interesadoEn', e.target.value)}>
+                <option value="">Busco</option>
+                <option value="mujeres">Mujeres</option>
+                <option value="hombres">Hombres</option>
+                <option value="todos">Todos</option>
+              </select>
+              {errors.interesadoEn && <p className="field-error">{errors.interesadoEn}</p>}
+            </div>
+          </div>
+          <input className="field" placeholder="Ciudad" value={form.ciudad} onChange={e => setField('ciudad', e.target.value)} />
+          {errors.ciudad && <p className="field-error">{errors.ciudad}</p>}
+          <textarea className="field" placeholder="Cuéntanos algo sobre ti (opcional)" rows={3} maxLength={200} value={form.bio} onChange={e => setField('bio', e.target.value)} />
+          <input className="field" type="email" placeholder="Email" value={form.email} onChange={e => setField('email', e.target.value)} />
+          {errors.email && <p className="field-error">{errors.email}</p>}
+          <input className="field" type="password" placeholder="Contraseña" value={form.password} onChange={e => setField('password', e.target.value)} />
+          {errors.password && <p className="field-error">{errors.password}</p>}
+          <input className="field" type="password" placeholder="Confirmar contraseña" value={form.confirmPassword} onChange={e => setField('confirmPassword', e.target.value)} />
+          {errors.confirmPassword && <p className="field-error">{errors.confirmPassword}</p>}
+          <label className="checkbox-row">
+            <input type="checkbox" checked={form.aceptaTerminos} onChange={e => setField('aceptaTerminos', e.target.checked)} />
+            <span>Confirmo que soy mayor de 18 años y acepto los Términos de uso y la Política de privacidad.</span>
+          </label>
+          {errors.aceptaTerminos && <p className="field-error">{errors.aceptaTerminos}</p>}
+          <button className="btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Registrando...' : 'Crear cuenta'}
+          </button>
+        </form>
+        <p className="switch-line">
+          ¿Ya tienes cuenta?
+          <button className="link-btn" onClick={onBackToLogin}>Inicia sesión</button>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// LOGIN (sin modo demo)
+// --------------------------------------------------------------
+function LoginScreen({ onLogin }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showRegister, setShowRegister] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!SUPABASE_SDK_LOADED) {
+      alert('El SDK de Supabase no cargó en este entorno. Usa "Entrar en modo demo" para probar la interfaz, o abre este archivo fuera de Claude.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+      onLogin(email);
+    } catch (error) {
+      alert('Error al iniciar sesión: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (showRegister) {
+    return <RegisterScreen onRegister={onLogin} onBackToLogin={() => setShowRegister(false)} />;
+  }
+
+  return (
+    <div className="login-screen">
+      <div className="login-inner">
+        <h1 className="login-title">LoveLevels</h1>
+        <p className="login-sub">Conecta por niveles. Primero tu mente, luego tu voz, al final tu rostro.</p>
+        {!SUPABASE_SDK_LOADED && (
+          <p className="field-error" style={{ textAlign: 'center', marginTop: 14 }}>
+            ⚠️ No se pudo cargar el SDK de Supabase en esta vista previa. El registro e inicio de sesión reales no funcionarán aquí — usa el modo demo abajo, o abre este archivo fuera de Claude.
+          </p>
+        )}
+        <form onSubmit={handleSubmit}>
+          <input className="field" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
+          <input className="field" type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} />
+          <button className="btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Cargando...' : 'Iniciar sesión'}
+          </button>
+        </form>
+        <p className="switch-line">
+          ¿No tienes cuenta?
+          <button className="link-btn" onClick={() => setShowRegister(true)}>Regístrate</button>
+        </p>
+        {!SUPABASE_SDK_LOADED && (
+          <>
+            <div className="divider-row"><hr /><span>o</span><hr /></div>
+            <button className="btn-outline" onClick={() => onLogin('demo@lovelevels.com')}>
+              Entrar en modo demo (sin Supabase)
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// SWIPE
+// --------------------------------------------------------------
+function SwipeScreen({ onMatch, users }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [offsetX, setOffsetX] = useState(0);
+  const [lastResult, setLastResult] = useState(null);
+
+  const currentUserData = users[currentIndex];
+
+  const handleSwipe = (direction) => {
+    if (!currentUserData) return;
+    if (direction === 'right') {
+      const isMatch = Math.random() > 0.4;
+      if (isMatch) {
+        onMatch(currentUserData);
+        setLastResult({ name: currentUserData.name });
+      } else {
+        setLastResult(null);
+      }
+    } else {
+      setLastResult(null);
+    }
+    setCurrentIndex(prev => prev + 1);
+    setOffsetX(0);
+  };
+
+  const startDrag = (x) => { setIsDragging(true); setStartX(x); };
+  const moveDrag = (x) => { if (isDragging) setOffsetX(x - startX); };
+  const endDrag = () => {
+    setIsDragging(false);
+    if (offsetX > 80) handleSwipe('right');
+    else if (offsetX < -80) handleSwipe('left');
+    else setOffsetX(0);
+  };
+
+  if (currentIndex >= users.length) {
+    return (
+      <div className="empty-state">
+        <div className="icon">👥</div>
+        <h2>No hay más perfiles</h2>
+        <p>Vuelve más tarde o amplía tu radio de búsqueda.</p>
+        <button className="btn-reload" onClick={() => { setCurrentIndex(0); setLastResult(null); }}>Ver perfiles de nuevo</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="swipe-screen">
+      <div className="swipe-header">
+        <h2>Descubrir</h2>
+        <span className="pill">{users.length - currentIndex} perfiles</span>
+      </div>
+      {lastResult && <div className="match-banner">💖 ¡Match con {lastResult.name}! Responde preguntas para conectar.</div>}
+      <div className="swipe-area">
+        <div
+          className="swipe-card"
+          style={{ transform: `translateX(${offsetX}px) rotate(${offsetX * 0.05}deg)`, transition: isDragging ? 'none' : 'transform 0.3s' }}
+          onTouchStart={e => startDrag(e.touches[0].clientX)}
+          onTouchMove={e => moveDrag(e.touches[0].clientX)}
+          onTouchEnd={endDrag}
+          onMouseDown={e => startDrag(e.clientX)}
+          onMouseMove={e => moveDrag(e.clientX)}
+          onMouseUp={endDrag}
+          onMouseLeave={() => isDragging && endDrag()}
+        >
+          <div className="avatar-fill" style={{ background: currentUserData.gradient || 'linear-gradient(135deg,#fb7185,#fdba74)' }}>
+            {currentUserData.name.charAt(0)}
+          </div>
+          <div className="card-info">
+            <h3>{currentUserData.name}, {currentUserData.age}</h3>
+            <p className="city">{currentUserData.city}</p>
+            <p className="bio">{currentUserData.bio}</p>
+          </div>
+        </div>
+        <div className="swipe-actions">
+          <button className="round-btn no" onClick={() => handleSwipe('left')}>✕</button>
+          <button className="round-btn yes" onClick={() => handleSwipe('right')}>♥</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// QUESTIONS
+// --------------------------------------------------------------
+function QuestionsScreen({ match, onComplete, onCancel }) {
+  const [answers, setAnswers] = useState([]);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef(null);
+
+  useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, [currentIdx]);
+
+  const handleNext = () => {
+    const trimmed = inputValue.trim();
+    if (!trimmed) return;
+    const newAnswers = [...answers, trimmed];
+    setAnswers(newAnswers);
+    setInputValue('');
+    if (currentIdx < QUESTIONS.length - 1) {
+      setCurrentIdx(currentIdx + 1);
+    } else {
+      onComplete(newAnswers);
+    }
+  };
+
+  const progress = ((answers.length) / QUESTIONS.length) * 100;
+
+  return (
+    <div className="questions-screen">
+      <div className="questions-header">
+        <h2>Conoce a {match.name}</h2>
+        <button onClick={onCancel}>Saltar</button>
+      </div>
+      <div className="progress-bar"><div className="progress-bar-fill" style={{ width: `${progress}%` }} /></div>
+      <div className="q-card">
+        <div className="q-number">Pregunta {currentIdx + 1} de {QUESTIONS.length}</div>
+        <div className="q-text">{QUESTIONS[currentIdx]}</div>
+        <input
+          ref={inputRef}
+          type="text"
+          placeholder="Escribe tu respuesta..."
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleNext()}
+        />
+        <button className="btn-next" onClick={handleNext}>
+          {currentIdx < QUESTIONS.length - 1 ? 'Siguiente →' : 'Completar →'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// REVEAL
+// --------------------------------------------------------------
+function RevealScreen({ match, myAnswers, theirAnswers, onContinue }) {
+  return (
+    <div className="reveal-screen">
+      <h2>✨ Conexión revelada</h2>
+      <p className="reveal-sub">Estas son las respuestas de {match.name}. Ahora sabes un poco más de ella/él.</p>
+      {QUESTIONS.map((q, i) => (
+        <div key={i} className="reveal-item">
+          <div className="q">{q}</div>
+          <div className="answers">
+            <span className="mine">Tú: {myAnswers[i] || '—'}</span>
+            <span className="theirs">{match.name}: {theirAnswers[i] || '—'}</span>
+          </div>
+        </div>
+      ))}
+      <button className="btn-continue" onClick={onContinue}>💬 Ir al chat (Nivel 1)</button>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// CHAT
+// --------------------------------------------------------------
+function ChatScreen({ match, level, messages, onSend, onAudio, onPhoto, onShareContact, isPremium }) {
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+
+  const send = () => {
+    if (!input.trim()) return;
+    onSend(input);
+    setInput('');
+  };
+
+  return (
+    <div className="chat-screen">
+      <div className="chat-header">
+        <div className="chat-header-left">
+          <div className="avatar-round" style={{ background: match.gradient || 'linear-gradient(135deg,#f59e0b,#ec4899)' }}>
+            {match.name.charAt(0)}
+          </div>
+          <div>
+            <p className="name">{match.name}</p>
+            <p className="lvl">★ Nivel {level}</p>
+          </div>
+        </div>
+        <div className="header-actions">
+          {level >= 2 && <button onClick={onAudio} className="icon-btn amber">🎤</button>}
+          {level >= 3 && <button onClick={onPhoto} className="icon-btn emerald">📷</button>}
+          {level >= 4 && isPremium && <button onClick={onShareContact} className="icon-btn" style={{ color: '#f472b6', borderColor: 'rgba(244,114,182,.3)' }}>📞</button>}
+        </div>
+      </div>
+      <div className="messages">
+        {messages.length === 0 && (
+          <div className="chat-empty">
+            <div className="icon">💬</div>
+            <p>Empieza la conversación</p>
+            <p style={{ fontSize: 12 }}>Nivel 1: solo texto</p>
+          </div>
+        )}
+        {messages.map(msg => (
+          <div key={msg.id} className={`msg-row ${msg.from}`}>
+            <div className={`bubble ${msg.from}`}>
+              {msg.isAudio && '🎤 '}{msg.isPhoto && '📷 '}{msg.isContact && '📞 '}
+              <p style={{ margin: 0 }}>{msg.text}</p>
+              <time>{msg.time}</time>
+            </div>
+          </div>
+        ))}
+        <div ref={messagesEndRef} />
+      </div>
+      <div className="chat-input-row">
+        {level >= 2 && <button onClick={onAudio} className="round-btn-sm">🎤</button>}
+        {level >= 3 && <button onClick={onPhoto} className="round-btn-sm">📷</button>}
+        <input
+          className="chat-input"
+          type="text"
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && send()}
+          placeholder={level === 1 ? 'Escribe un mensaje...' : 'Escribe o usa el micrófono...'}
+        />
+        <button className="send-btn" onClick={send}>➤</button>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// PROGRESS
+// --------------------------------------------------------------
+function ProgressScreen({ match, level, xp, hasAccepted, onProposeLevelUp, isPremium }) {
+  const xpToNext = () => {
+    const next = LEVELS.find(l => l.id === level + 1);
+    return next ? next.xpReq : xp;
+  };
+
+  const progress = () => {
+    const cur = LEVELS.find(l => l.id === level);
+    const next = LEVELS.find(l => l.id === level + 1);
+    if (!next) return 100;
+    const inLevel = xp - (cur ? cur.xpReq : 0);
+    const needed = next.xpReq - (cur ? cur.xpReq : 0);
+    return Math.min((inLevel / needed) * 100, 100);
+  };
+
+  const allLevels = [...LEVELS, { id: 4, name: 'Teléfono', xpReq: 500 }];
+
+  if (!match) {
+    return (
+      <div className="empty-state">
+        <div className="icon">⚡</div>
+        <h2>Todavía no tienes un match</h2>
+        <p>Desliza a la derecha en Descubrir para conseguir tu primer match.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="progress-screen">
+      <div className="progress-header">
+        <h2>Mi progreso</h2>
+        <div className="match-chip">
+          <span>⚡</span>
+          <span>Match: {match.name}</span>
+        </div>
+      </div>
+
+      <div className="xp-card">
+        <div className="xp-row">
+          <span>Experiencia (XP)</span>
+          <span>{xp} / {level >= 4 ? 'MAX' : xpToNext()}</span>
+        </div>
+        <div className="xp-track">
+          <div className="xp-fill" style={{ width: `${level >= 4 ? 100 : progress()}%` }} />
+        </div>
+
+        <div className="levels-row">
+          <div className="levels-track">
+            <div className="levels-track-fill" style={{ width: `${((level - 1) / (allLevels.length - 1)) * 100}%` }} />
+          </div>
+          {allLevels.map(lvl => {
+            const unlocked = level >= lvl.id;
+            const isCurrent = level === lvl.id;
+            const isLockedPremium = lvl.id === 4 && !isPremium;
+            return (
+              <div key={lvl.id} className={`level-node ${unlocked ? 'unlocked' : ''}`}>
+                <div className={`level-circle ${unlocked ? 'unlocked' : ''} ${isCurrent ? 'current' : ''}`}>
+                  {isLockedPremium ? '⭐' : unlocked ? '✓' : '🔒'}
+                </div>
+                <span>{lvl.name}{isLockedPremium && ' (Premium)'}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {level < 4 ? (
+        <>
+          <button
+            className="btn-levelup"
+            disabled={hasAccepted}
+            onClick={onProposeLevelUp}
+          >
+            {hasAccepted ? '⏳ Esperando confirmación...' : `⬆️ Subir a Nivel ${level + 1}`}
+          </button>
+          <div className="hint-box">
+            {hasAccepted ? (
+              <span className="accepted">★ Aceptaste. Esperando a {match.name}.</span>
+            ) : (
+              <span>📌 Ambos deben aceptar para subir al siguiente nivel.</span>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="hint-box" style={{ color: 'var(--emerald)', borderColor: 'rgba(52,211,153,.4)' }}>
+          🎉 ¡Nivel máximo alcanzado! {isPremium ? 'Puedes compartir tu teléfono.' : 'Activa Premium para compartir tu teléfono.'}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// PROFILE
+// --------------------------------------------------------------
+function ProfileScreen({ email, matchCount, level, onLogout, isPremium, onTogglePremium }) {
+  return (
+    <div className="profile-screen">
+      <div className="profile-avatar">{email.charAt(0).toUpperCase()}</div>
+      <h2>Usuario Demo</h2>
+      <p className="email">{email}</p>
+      <div className="profile-stats">
+        <div className="stat-row"><span>Nivel actual</span><span className="val-amber">Nivel {level}</span></div>
+        <div className="stat-row"><span>Matches</span><span className="val-emerald">{matchCount}</span></div>
+        <button className={`btn-premium ${isPremium ? 'active' : 'inactive'}`} onClick={onTogglePremium}>
+          {isPremium ? '⭐ Premium activado' : '⭐ Activar Premium (demo)'}
+        </button>
+        <button className="btn-logout" onClick={onLogout}>⎋ Cerrar sesión</button>
+      </div>
+    </div>
+  );
+}
+
+// --------------------------------------------------------------
+// APP
+// --------------------------------------------------------------
+function App() {
+  const [email, setEmail] = useState(null);
+  const [activeTab, setActiveTab] = useState('swipe');
+  const [matches, setMatches] = useState([]);
+  const [currentMatch, setCurrentMatch] = useState(null);
+  const [level, setLevel] = useState(1);
+  const [xp, setXp] = useState(45);
+  const [hasAccepted, setHasAccepted] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const [phase, setPhase] = useState(null);
+  const [myAnswers, setMyAnswers] = useState([]);
+  const [theirAnswers, setTheirAnswers] = useState([]);
+  const [users, setUsers] = useState(MOCK_USERS);
+
+  const showToast = (msg, duration = 2200) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), duration);
+  };
+
+  const handleLogin = (mail) => setEmail(mail);
+
+  const handleLogout = () => {
+    setEmail(null);
+    setActiveTab('swipe');
+    setMatches([]);
+    setCurrentMatch(null);
+    setLevel(1);
+    setXp(45);
+    setHasAccepted(false);
+    setMessages([]);
+    setPhase(null);
+    setMyAnswers([]);
+    setTheirAnswers([]);
+    setIsPremium(false);
+  };
+
+  const handleMatch = (user) => {
+    setMatches(prev => [...prev, user]);
+    setCurrentMatch(user);
+    setLevel(1);
+    setXp(45);
+    setHasAccepted(false);
+    setMessages([]);
+    setPhase('questions');
+    setMyAnswers([]);
+    setTheirAnswers([]);
+    setActiveTab('chat');
+  };
+
+  const handleQuestionsComplete = (answers) => {
+    setMyAnswers(answers);
+    const mockTheir = [
+      'Un viaje a la Patagonia',
+      'La película "La vida es bella"',
+      'A Frida Kahlo',
+      'A la oscuridad',
+      'La música en vivo'
+    ];
+    setTheirAnswers(mockTheir);
+    setPhase('reveal');
+    showToast('✨ Respuestas reveladas', 2000);
+  };
+
+  const handleRevealContinue = () => {
+    setPhase('chat');
+    showToast('💬 Chat desbloqueado (Nivel 1)', 2000);
+  };
+
+  const handleProposeLevelUp = () => {
+    if (level >= 4 || hasAccepted) return;
+    setHasAccepted(true);
+    showToast('📤 Propuesta enviada', 1500);
+    setTimeout(() => {
+      const nextLevel = level + 1;
+      setLevel(nextLevel);
+      setXp(prev => Math.min(prev + 50, 500));
+      setHasAccepted(false);
+      showToast(`🎉 ¡Subieron a Nivel ${nextLevel}!`, 2500);
+    }, 2000);
+  };
+
+  const handleSendMessage = (text) => {
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages(prev => [...prev, { id: Date.now(), text, from: 'me', time: now }]);
+    setXp(prev => Math.min(prev + 5, 500));
+    setTimeout(() => {
+      const replies = [
+        '¡Qué interesante! Cuéntame más.',
+        'Me encanta esa respuesta.',
+        '¿En serio? ¡Qué genial!',
+        'Nunca había pensado en eso.',
+        '¡Totalmente de acuerdo!'
+      ];
+      const randomReply = replies[Math.floor(Math.random() * replies.length)];
+      setMessages(prev => [...prev, { id: Date.now() + 1, text: randomReply, from: 'them', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }]);
+    }, 1200);
+  };
+
+  const handleAudio = () => {
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages(prev => [...prev, { id: Date.now(), text: 'Nota de voz (simulada)', from: 'me', time: now, isAudio: true }]);
+    setXp(prev => Math.min(prev + 10, 500));
+    setTimeout(() => {
+      setMessages(prev => [...prev, { id: Date.now() + 1, text: '¡Me encanta tu voz!', from: 'them', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isAudio: true }]);
+    }, 1500);
+  };
+
+  const handlePhoto = () => {
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages(prev => [...prev, { id: Date.now(), text: 'Foto compartida (simulada)', from: 'me', time: now, isPhoto: true }]);
+    setXp(prev => Math.min(prev + 10, 500));
+    setTimeout(() => {
+      setMessages(prev => [...prev, { id: Date.now() + 1, text: '¡Qué bonita foto!', from: 'them', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), isPhoto: true }]);
+    }, 1500);
+  };
+
+  const handleShareContact = () => {
+    if (!isPremium) {
+      showToast('🔒 Función Premium. Actívala en tu perfil.', 2000);
+      return;
+    }
+    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setMessages(prev => [...prev, { id: Date.now(), text: 'Has compartido tu número de teléfono con ' + currentMatch.name, from: 'me', time: now, isContact: true }]);
+    showToast('📞 Número compartido', 2000);
+  };
+
+  const handleTogglePremium = () => {
+    setIsPremium(prev => !prev);
+    showToast(isPremium ? '⭐ Premium desactivado' : '⭐ Premium activado (demo)', 1500);
+  };
+
+  if (!email) {
+    return (
+      <div className="app-shell">
+        <div className="phone">
+          <LoginScreen onLogin={handleLogin} />
+        </div>
+      </div>
+    );
+  }
+
+  const tabs = [
+    { id: 'swipe', icon: '♥', label: 'Descubrir' },
+    { id: 'progress', icon: '⚡', label: 'Progreso' },
+    { id: 'chat', icon: '💬', label: 'Chats' },
+    { id: 'profile', icon: '👤', label: 'Perfil' },
+  ];
+
+  const renderChatContent = () => {
+    if (!currentMatch) {
+      return (
+        <div className="empty-state">
+          <div className="icon">💬</div>
+          <h2>Sin conversaciones</h2>
+          <p>Consigue un match en Descubrir.</p>
+        </div>
+      );
+    }
+    if (phase === 'questions') {
+      return (
+        <QuestionsScreen
+          match={currentMatch}
+          onComplete={handleQuestionsComplete}
+          onCancel={() => { setPhase('chat'); showToast('Preguntas saltadas', 1500); }}
+        />
+      );
+    }
+    if (phase === 'reveal') {
+      return (
+        <RevealScreen
+          match={currentMatch}
+          myAnswers={myAnswers}
+          theirAnswers={theirAnswers}
+          onContinue={handleRevealContinue}
+        />
+      );
+    }
+    return (
+      <ChatScreen
+        match={currentMatch}
+        level={level}
+        messages={messages}
+        onSend={handleSendMessage}
+        onAudio={handleAudio}
+        onPhoto={handlePhoto}
+        onShareContact={handleShareContact}
+        isPremium={isPremium}
+      />
+    );
+  };
+
+  return (
+    <div className="app-shell">
+      <div className="phone">
+        <div style={{ flex: 1, overflow: 'hidden' }}>
+          {activeTab === 'swipe' && <SwipeScreen onMatch={handleMatch} users={users} />}
+          {activeTab === 'progress' && (
+            <ProgressScreen
+              match={currentMatch}
+              level={level}
+              xp={xp}
+              hasAccepted={hasAccepted}
+              onProposeLevelUp={handleProposeLevelUp}
+              isPremium={isPremium}
+            />
+          )}
+          {activeTab === 'chat' && renderChatContent()}
+          {activeTab === 'profile' && (
+            <ProfileScreen
+              email={email}
+              matchCount={matches.length}
+              level={level}
+              onLogout={handleLogout}
+              isPremium={isPremium}
+              onTogglePremium={handleTogglePremium}
+            />
+          )}
+        </div>
+        <div className="bottom-nav">
+          {tabs.map(tab => (
+            <button key={tab.id} className={`nav-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setActiveTab(tab.id)}>
+              <span className="nav-icon">{tab.icon}</span>
+              <span className="nav-label">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+        {toast && <div className="toast">{toast}</div>}
+      </div>
+    </div>
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App />);
+</script>
+</body>
+</html>
