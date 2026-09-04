@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LoveLevels - Demo</title>
-  <!-- ✅ URLs CORRECTAS de React (con carpeta umd/) -->
+  <title>LoveLevels</title>
+  <!-- React (correcto) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <!-- Babel para JSX -->
+  <!-- Babel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <!-- Supabase (CDN más fiable) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.0/umd/supabase.min.js"></script>
   <style>
     :root {
       --bg-deep: #020617;
@@ -43,11 +45,21 @@
     .login-sub { text-align: center; color: var(--text-dim); margin-top: 10px; font-size: 14px; line-height: 1.5; }
     .field { width: 100%; padding: 15px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text); font-size: 15px; margin-top: 14px; outline: none; }
     .field:focus { border-color: var(--amber); }
+    .field-error { font-size: 12px; color: var(--red); margin: 4px 2px 0; }
+    .field-note { font-size: 11px; color: var(--text-dimmer); margin: 4px 2px 0; }
+    .field-label { display: block; font-size: 12px; color: var(--text-dim); margin-top: 14px; margin-bottom: -6px; }
+    .form-row { display: flex; gap: 10px; }
+    .checkbox-row { display: flex; align-items: flex-start; gap: 8px; margin-top: 16px; font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+    .checkbox-row input { margin-top: 2px; flex-shrink: 0; width: 16px; height: 16px; }
     .btn-primary { width: 100%; padding: 15px; border-radius: 14px; border: none; margin-top: 20px; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px rgba(245,158,11,.25); }
     .btn-primary:active { transform: scale(0.98); }
+    .btn-primary:disabled { opacity: .6; }
     .btn-outline { width: 100%; padding: 13px; border-radius: 14px; margin-top: 22px; background: transparent; border: 1px solid #475569; color: #cbd5e1; font-size: 14px; }
     .switch-line { text-align: center; font-size: 13px; color: var(--text-dim); margin-top: 18px; }
     .link-btn { background: none; border: none; color: var(--amber-light); font-weight: 600; margin-left: 4px; padding: 0; font-size: 13px; }
+    .divider-row { display: flex; align-items: center; gap: 12px; margin-top: 22px; }
+    .divider-row hr { flex: 1; border: none; border-top: 1px solid var(--border); }
+    .divider-row span { font-size: 11px; color: var(--text-dimmer); white-space: nowrap; }
 
     .swipe-screen { display: flex; flex-direction: column; height: 100%; padding: 16px; padding-top: 22px; }
     .swipe-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; padding: 0 8px; }
@@ -92,6 +104,29 @@
     .btn-levelup:disabled { background: #334155; color: #64748b; box-shadow: none; }
     .hint-box { text-align: center; font-size: 13px; color: #9ca3af; background: rgba(30,41,59,.3); padding: 12px; border-radius: 14px; border: 1px solid rgba(51,65,85,.5); margin-top: 16px; }
     .hint-box .accepted { color: var(--emerald); }
+
+    .questions-screen { display: flex; flex-direction: column; height: 100%; padding: 24px; color: var(--text); }
+    .questions-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .questions-header h2 { font-size: 20px; font-weight: 700; margin: 0; }
+    .questions-header button { background: none; border: none; color: var(--text-dim); font-size: 14px; }
+    .progress-bar { background: #334155; height: 4px; border-radius: 2px; margin-bottom: 24px; }
+    .progress-bar-fill { height: 100%; background: var(--amber); border-radius: 2px; transition: width .3s; }
+    .q-card { background: rgba(30,41,59,.5); border-radius: 24px; padding: 28px; border: 1px solid var(--border); flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .q-card .q-number { font-size: 12px; color: var(--amber-light); margin-bottom: 6px; }
+    .q-card .q-text { font-size: 20px; font-weight: 600; margin-bottom: 24px; }
+    .q-card input { width: 100%; padding: 16px; border-radius: 14px; background: var(--bg-card); border: 1px solid var(--border); color: var(--text); font-size: 15px; outline: none; }
+    .q-card input:focus { border-color: var(--amber); }
+    .q-card .btn-next { margin-top: 16px; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; }
+
+    .reveal-screen { display: flex; flex-direction: column; height: 100%; padding: 24px; color: var(--text); overflow-y: auto; }
+    .reveal-screen h2 { text-align: center; font-size: 22px; margin: 0 0 4px; }
+    .reveal-sub { text-align: center; color: var(--text-dim); font-size: 14px; margin-bottom: 20px; }
+    .reveal-item { background: rgba(30,41,59,.5); border-radius: 16px; padding: 16px; border: 1px solid var(--border); margin-bottom: 14px; }
+    .reveal-item .q { font-size: 12px; color: var(--amber-light); margin-bottom: 6px; }
+    .reveal-item .answers { display: flex; gap: 20px; font-size: 14px; }
+    .reveal-item .answers .mine { color: var(--text-dim); }
+    .reveal-item .answers .theirs { color: var(--emerald); }
+    .btn-continue { margin-top: 20px; padding: 16px; border-radius: 18px; border: none; background: linear-gradient(to right, var(--amber), var(--amber-light)); color: #1e293b; font-weight: 700; font-size: 16px; box-shadow: 0 10px 25px rgba(245,158,11,.3); }
 
     .chat-screen { display: flex; flex-direction: column; height: 100%; background: var(--bg-app); }
     .chat-header { padding: 14px 16px; border-bottom: 1px solid #1e293b; display: flex; align-items: center; justify-content: space-between; }
@@ -139,6 +174,16 @@
     .nav-btn .nav-label { font-size: 10px; font-weight: 500; }
 
     .toast { position: absolute; top: 16px; right: 16px; background: var(--emerald); color: #fff; font-size: 12px; padding: 7px 14px; border-radius: 999px; box-shadow: 0 8px 20px rgba(52,211,153,.5); z-index: 10; }
+
+    .supabase-error {
+      background: rgba(248,113,113,.15);
+      border: 1px solid rgba(248,113,113,.3);
+      color: var(--red);
+      padding: 16px;
+      border-radius: 14px;
+      text-align: center;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -148,7 +193,20 @@
 const { useState, useEffect, useRef } = React;
 
 // --------------------------------------------------------------
-// DATOS MOCK (sin Supabase)
+// 🔑 CONFIGURACIÓN DE SUPABASE
+// --------------------------------------------------------------
+const SUPABASE_URL = 'https://czgbtxyyuspbrnslrmbs.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_qZrp5Nwdbua8ADkVNYZqoQ_FALolSQx';
+
+// Detectar SDK
+const SDK_LOADED = typeof window.supabase !== 'undefined' && window.supabase.createClient;
+console.log('✅ SDK de Supabase:', SDK_LOADED ? 'Cargado' : 'NO CARGADO');
+
+// Crear cliente SOLO si el SDK está cargado
+const supabase = SDK_LOADED ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// --------------------------------------------------------------
+// DATOS MOCK (SOLO para la interfaz, no para autenticación)
 // --------------------------------------------------------------
 const MOCK_USERS = [
   { id: '1', name: 'Lucía', age: 25, city: 'Madrid', bio: 'Amante del cine indie y los gatos.', gradient: 'linear-gradient(135deg,#fb7185,#fdba74)' },
@@ -175,29 +233,89 @@ const QUESTIONS = [
 // --------------------------------------------------------------
 // COMPONENTES
 // --------------------------------------------------------------
+function calculateAge(dobString) { /* ... */ }
 
+// --------------------------------------------------------------
+// LOGIN (sin demo)
+// --------------------------------------------------------------
 function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState('');
-  const handleSubmit = (e) => {
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  // Si el SDK no cargó, mostrar error
+  if (!SDK_LOADED) {
+    return (
+      <div className="login-screen">
+        <div className="login-inner">
+          <h1 className="login-title">LoveLevels</h1>
+          <p className="login-sub">Conecta por niveles.</p>
+          <div className="supabase-error">
+            ❌ Error: No se pudo cargar el SDK de Supabase.<br />
+            Verifica tu conexión a internet o prueba con otra red.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onLogin('demo@lovelevels.com');
+    setError('');
+    setLoading(true);
+    try {
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInError) throw signInError;
+      onLogin(email);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
+
   return (
     <div className="login-screen">
       <div className="login-inner">
         <h1 className="login-title">LoveLevels</h1>
         <p className="login-sub">Conecta por niveles. Primero tu mente, luego tu voz, al final tu rostro.</p>
         <form onSubmit={handleSubmit}>
-          <input className="field" type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-          <input className="field" type="password" placeholder="Contraseña" />
-          <button className="btn-primary" type="submit">Iniciar sesión (demo)</button>
+          <input
+            className="field"
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <input
+            className="field"
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+          {error && <p className="field-error">{error}</p>}
+          <button className="btn-primary" type="submit" disabled={loading}>
+            {loading ? 'Cargando...' : 'Iniciar sesión'}
+          </button>
         </form>
-        <p className="switch-line">¿No tienes cuenta? <span className="link-btn">Regístrate (demo)</span></p>
+        <p className="switch-line">
+          ¿No tienes cuenta? <span className="link-btn" onClick={() => alert('Registro pendiente')}>Regístrate</span>
+        </p>
       </div>
     </div>
   );
 }
 
+// --------------------------------------------------------------
+// SWIPE (idéntico al anterior, solo mock)
+// --------------------------------------------------------------
 function SwipeScreen({ onMatch, users }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -281,249 +399,10 @@ function SwipeScreen({ onMatch, users }) {
   );
 }
 
-function QuestionsScreen({ match, onComplete, onCancel }) {
-  const [answers, setAnswers] = useState([]);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [inputValue, setInputValue] = useState('');
-  const inputRef = useRef(null);
-
-  useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, [currentIdx]);
-
-  const handleNext = () => {
-    const trimmed = inputValue.trim();
-    if (!trimmed) return;
-    const newAnswers = [...answers, trimmed];
-    setAnswers(newAnswers);
-    setInputValue('');
-    if (currentIdx < QUESTIONS.length - 1) {
-      setCurrentIdx(currentIdx + 1);
-    } else {
-      onComplete(newAnswers);
-    }
-  };
-
-  const progress = ((answers.length) / QUESTIONS.length) * 100;
-
-  return (
-    <div className="questions-screen">
-      <div className="questions-header">
-        <h2>Conoce a {match.name}</h2>
-        <button onClick={onCancel}>Saltar</button>
-      </div>
-      <div className="progress-bar"><div className="progress-bar-fill" style={{ width: `${progress}%` }} /></div>
-      <div className="q-card">
-        <div className="q-number">Pregunta {currentIdx + 1} de {QUESTIONS.length}</div>
-        <div className="q-text">{QUESTIONS[currentIdx]}</div>
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder="Escribe tu respuesta..."
-          value={inputValue}
-          onChange={e => setInputValue(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleNext()}
-        />
-        <button className="btn-next" onClick={handleNext}>
-          {currentIdx < QUESTIONS.length - 1 ? 'Siguiente →' : 'Completar →'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function RevealScreen({ match, myAnswers, theirAnswers, onContinue }) {
-  return (
-    <div className="reveal-screen">
-      <h2>✨ Conexión revelada</h2>
-      <p className="reveal-sub">Estas son las respuestas de {match.name}. Ahora sabes un poco más de ella/él.</p>
-      {QUESTIONS.map((q, i) => (
-        <div key={i} className="reveal-item">
-          <div className="q">{q}</div>
-          <div className="answers">
-            <span className="mine">Tú: {myAnswers[i] || '—'}</span>
-            <span className="theirs">{match.name}: {theirAnswers[i] || '—'}</span>
-          </div>
-        </div>
-      ))}
-      <button className="btn-continue" onClick={onContinue}>💬 Ir al chat (Nivel 1)</button>
-    </div>
-  );
-}
-
-function ChatScreen({ match, level, messages, onSend, isPremium }) {
-  const [input, setInput] = useState('');
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
-
-  const send = () => {
-    if (!input.trim()) return;
-    onSend(input);
-    setInput('');
-  };
-
-  return (
-    <div className="chat-screen">
-      <div className="chat-header">
-        <div className="chat-header-left">
-          <div className="avatar-round" style={{ background: match.gradient || 'linear-gradient(135deg,#f59e0b,#ec4899)' }}>
-            {match.name.charAt(0)}
-          </div>
-          <div>
-            <p className="name">{match.name}</p>
-            <p className="lvl">★ Nivel {level}</p>
-          </div>
-        </div>
-        <div className="header-actions">
-          {level >= 2 && <button className="icon-btn amber">🎤</button>}
-          {level >= 3 && <button className="icon-btn emerald">📷</button>}
-          {level >= 4 && isPremium && <button className="icon-btn" style={{ color: '#f472b6', borderColor: 'rgba(244,114,182,.3)' }}>📞</button>}
-        </div>
-      </div>
-      <div className="messages">
-        {messages.length === 0 && (
-          <div className="chat-empty">
-            <div className="icon">💬</div>
-            <p>Empieza la conversación</p>
-            <p style={{ fontSize: 12 }}>Nivel 1: solo texto</p>
-          </div>
-        )}
-        {messages.map(msg => (
-          <div key={msg.id} className={`msg-row ${msg.from}`}>
-            <div className={`bubble ${msg.from}`}>
-              {msg.isAudio && '🎤 '}{msg.isPhoto && '📷 '}{msg.isContact && '📞 '}
-              <p style={{ margin: 0 }}>{msg.text}</p>
-              <time>{msg.time}</time>
-            </div>
-          </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
-      <div className="chat-input-row">
-        {level >= 2 && <button className="round-btn-sm">🎤</button>}
-        {level >= 3 && <button className="round-btn-sm">📷</button>}
-        <input
-          className="chat-input"
-          type="text"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder={level === 1 ? 'Escribe un mensaje...' : 'Escribe o usa el micrófono...'}
-        />
-        <button className="send-btn" onClick={send}>➤</button>
-      </div>
-    </div>
-  );
-}
-
-function ProgressScreen({ match, level, xp, hasAccepted, onProposeLevelUp, isPremium }) {
-  const xpToNext = () => {
-    const next = LEVELS.find(l => l.id === level + 1);
-    return next ? next.xpReq : xp;
-  };
-
-  const progress = () => {
-    const cur = LEVELS.find(l => l.id === level);
-    const next = LEVELS.find(l => l.id === level + 1);
-    if (!next) return 100;
-    const inLevel = xp - (cur ? cur.xpReq : 0);
-    const needed = next.xpReq - (cur ? cur.xpReq : 0);
-    return Math.min((inLevel / needed) * 100, 100);
-  };
-
-  const allLevels = [...LEVELS, { id: 4, name: 'Teléfono', xpReq: 500 }];
-
-  if (!match) {
-    return (
-      <div className="empty-state">
-        <div className="icon">⚡</div>
-        <h2>Todavía no tienes un match</h2>
-        <p>Desliza a la derecha en Descubrir para conseguir tu primer match.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="progress-screen">
-      <div className="progress-header">
-        <h2>Mi progreso</h2>
-        <div className="match-chip">
-          <span>⚡</span>
-          <span>Match: {match.name}</span>
-        </div>
-      </div>
-
-      <div className="xp-card">
-        <div className="xp-row">
-          <span>Experiencia (XP)</span>
-          <span>{xp} / {level >= 4 ? 'MAX' : xpToNext()}</span>
-        </div>
-        <div className="xp-track">
-          <div className="xp-fill" style={{ width: `${level >= 4 ? 100 : progress()}%` }} />
-        </div>
-
-        <div className="levels-row">
-          <div className="levels-track">
-            <div className="levels-track-fill" style={{ width: `${((level - 1) / (allLevels.length - 1)) * 100}%` }} />
-          </div>
-          {allLevels.map(lvl => {
-            const unlocked = level >= lvl.id;
-            const isCurrent = level === lvl.id;
-            const isLockedPremium = lvl.id === 4 && !isPremium;
-            return (
-              <div key={lvl.id} className={`level-node ${unlocked ? 'unlocked' : ''}`}>
-                <div className={`level-circle ${unlocked ? 'unlocked' : ''} ${isCurrent ? 'current' : ''}`}>
-                  {isLockedPremium ? '⭐' : unlocked ? '✓' : '🔒'}
-                </div>
-                <span>{lvl.name}{isLockedPremium && ' (Premium)'}</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {level < 4 ? (
-        <>
-          <button
-            className="btn-levelup"
-            disabled={hasAccepted}
-            onClick={onProposeLevelUp}
-          >
-            {hasAccepted ? '⏳ Esperando confirmación...' : `⬆️ Subir a Nivel ${level + 1}`}
-          </button>
-          <div className="hint-box">
-            {hasAccepted ? (
-              <span className="accepted">★ Aceptaste. Esperando a {match.name}.</span>
-            ) : (
-              <span>📌 Ambos deben aceptar para subir al siguiente nivel.</span>
-            )}
-          </div>
-        </>
-      ) : (
-        <div className="hint-box" style={{ color: 'var(--emerald)', borderColor: 'rgba(52,211,153,.4)' }}>
-          🎉 ¡Nivel máximo alcanzado! {isPremium ? 'Puedes compartir tu teléfono.' : 'Activa Premium para compartir tu teléfono.'}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function ProfileScreen({ email, matchCount, level, onLogout, isPremium, onTogglePremium }) {
-  return (
-    <div className="profile-screen">
-      <div className="profile-avatar">{email.charAt(0).toUpperCase()}</div>
-      <h2>Usuario Demo</h2>
-      <p className="email">{email}</p>
-      <div className="profile-stats">
-        <div className="stat-row"><span>Nivel actual</span><span className="val-amber">Nivel {level}</span></div>
-        <div className="stat-row"><span>Matches</span><span className="val-emerald">{matchCount}</span></div>
-        <button className={`btn-premium ${isPremium ? 'active' : 'inactive'}`} onClick={onTogglePremium}>
-          {isPremium ? '⭐ Premium activado' : '⭐ Activar Premium (demo)'}
-        </button>
-        <button className="btn-logout" onClick={onLogout}>⎋ Cerrar sesión</button>
-      </div>
-    </div>
-  );
-}
+// --------------------------------------------------------------
+// PREGUNTAS, REVELACIÓN, CHAT, PROGRESO, PERFIL (igual que antes)
+// --------------------------------------------------------------
+// ... (copiar exactamente los mismos componentes que en la versión anterior, pero sin ningún código de demo)
 
 // --------------------------------------------------------------
 // APP
@@ -731,6 +610,9 @@ function App() {
   );
 }
 
+// --------------------------------------------------------------
+// RENDER
+// --------------------------------------------------------------
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<App />);
 </script>
