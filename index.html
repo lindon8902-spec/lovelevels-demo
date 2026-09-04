@@ -7,7 +7,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.39.0/umd/supabase.min.js"></script>
+<!-- CDN de Supabase CAMBIADA a la más estable -->
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
 <style>
   :root {
     --bg-deep: #020617;
@@ -185,10 +186,18 @@ const { useState, useEffect, useRef } = React;
 const SUPABASE_URL = 'https://czgbtxyyuspbrnslrmbs.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_qZrp5Nwdbua8ADkVNYZqoQ_FALolSQx';
 
+// Verificar si el SDK de Supabase está cargado
 const SUPABASE_SDK_LOADED = typeof window.supabase !== 'undefined';
+console.log('✅ SDK de Supabase cargado:', SUPABASE_SDK_LOADED);
+
 const supabase = SUPABASE_SDK_LOADED
   ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
   : null;
+
+// Si el SDK no cargó, mostrar advertencia en consola
+if (!SUPABASE_SDK_LOADED) {
+  console.warn('⚠️ El SDK de Supabase no se cargó. Asegúrate de que la CDN esté accesible.');
+}
 
 // --------------------------------------------------------------
 // DATOS MOCK (perfiles a descubrir)
@@ -388,7 +397,7 @@ function RegisterScreen({ onRegister, onBackToLogin }) {
 }
 
 // --------------------------------------------------------------
-// LOGIN (sin modo demo)
+// LOGIN
 // --------------------------------------------------------------
 function LoginScreen({ onLogin }) {
   const [email, setEmail] = useState('');
